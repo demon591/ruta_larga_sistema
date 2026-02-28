@@ -4,6 +4,14 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 // 1. SEGURIDAD E INACTIVIDAD
 $timeout = 600;
+if (!isset($_SESSION["usuario"])) { 
+    header("Location: login.php"); 
+    exit(); 
+}
+
+if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_actividad'] > $timeout)) {
+    session_unset(); 
+    session_destroy();
 if (!isset($_SESSION["usuario"])) { header("Location: login.php"); exit(); }
 if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_actividad'] > $timeout)) {
     session_unset(); session_destroy();
@@ -12,6 +20,7 @@ if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_activida
 }
 $_SESSION['ultima_actividad'] = time();
 
+// 2. CONEXIÓN Y CLASE VEHÍCULO
 class Conexion {
     protected $conexion;
     public function __construct() {
@@ -28,6 +37,9 @@ class Vehiculo extends Conexion {
     public function setModelo($v) { $this->modelo = substr(trim($v), 0, 40); }
     public function setMarca($v) { $this->marca = substr(trim($v), 0, 20); }
 
+    public function listar() { 
+        return $this->conexion->query("SELECT * FROM vehiculos ORDER BY ID_vehiculo DESC"); 
+    }
     public function listar() { return $this->conexion->query("SELECT * FROM vehiculos ORDER BY ID_vehiculo DESC"); }
     
     public function insertar() {
@@ -51,6 +63,36 @@ class Vehiculo extends Conexion {
 
 $vehiculoObj = new Vehiculo();
 
+// 3. PROCESAMIENTO DE ACCIONES (LÓGICA ANTES DEL LISTADO)
+
+// --- ACCIÓN: ELIMINAR ---
+if (isset($_GET['delete'])) {
+    $id_borrar = intval($_GET['delete']);
+    if ($id_borrar > 0) {
+        $vehiculoObj->eliminar($id_borrar);
+        header("Location: " . $_SERVER['PHP_SELF'] . "?status=del");
+        exit();
+    }
+}
+
+// --- ACCIÓN: REGISTRAR O EDITAR ---
+if (isset($_POST['registrar']) || isset($_POST['editar'])) {
+    $vehiculoObj->setPlaca($_POST['placa']);
+    $vehiculoObj->setModelo($_POST['modelo']);
+    $vehiculoObj->setMarca($_POST['marca']);
+
+    if (isset($_POST['registrar'])) {
+        $vehiculoObj->insertar();
+        header("Location: " . $_SERVER['PHP_SELF'] . "?status=reg");
+    } else {
+        $vehiculoObj->setId($_POST['ID_vehiculo']);
+        $vehiculoObj->modificar();
+        header("Location: " . $_SERVER['PHP_SELF'] . "?status=edit");
+    }
+    exit();
+}
+
+// 4. OBTENER RESULTADOS ACTUALIZADOS (DESPUÉS DE BORRAR/EDITAR)
 // PROCESAMIENTO
 if (isset($_POST['registrar']) || isset($_POST['editar'])) {
     $vehiculoObj->setPlaca($_POST['placa']);
@@ -85,6 +127,10 @@ $result = $vehiculoObj->listar();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: Georgia, 'Times New Roman', Times, serif; 
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; }
         .navbar-custom { background-color: #08082c; }
@@ -101,6 +147,9 @@ $result = $vehiculoObj->listar();
             background-attachment: fixed;
             background-repeat: no-repeat;
         }
+        .navbar-custom { background-color: #08082c; }
+        .modal-header { background-color: #08082c; color: white; }
+        .placa-badge { background: #fff3e0; color: #e65100; font-weight: bold; border: 1px solid #ffe0b2; font-family: monospace; letter-spacing: 1px; }
         /* Glassmorphism para las tarjetas si prefieres un estilo más moderno */
         .glass-card {
             background: rgba(255, 255, 255, 0.9);
@@ -117,6 +166,7 @@ $result = $vehiculoObj->listar();
     </div>
 </nav>
 
+<div class="container glass-card p-4 shadow rounded">
 <div class="container bg-white p-4 shadow rounded">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4>Listado de Flota</h4>
@@ -145,6 +195,7 @@ $result = $vehiculoObj->listar();
                             data-marca="<?= htmlspecialchars($fila['marca']) ?>"
                             data-modelo="<?= htmlspecialchars($fila['modelo']) ?>"
                             data-toggle="modal" data-target="#modalEditar">Editar</button>
+                    
                     <button class="btn btn-danger btn-sm" onclick="confirmarEliminar(<?= $fila['ID_vehiculo'] ?>, '<?= $fila['placa'] ?>')">Borrar</button>
                 </td>
             </tr>
@@ -159,6 +210,7 @@ $result = $vehiculoObj->listar();
             <form method="POST">
                 <div class="modal-header"><h5>Registrar Vehículo</h5></div>
                 <div class="modal-body p-4">
+                    <div class="form-group"><label>Placa</label><input type="text" name="placa" class="form-control text-uppercase" required></div>
                     <div class="form-group">
                         <label>Placa</label>
                         <input type="text" name="placa" class="form-control text-uppercase" placeholder="ABC-123" required maxlength="10">
@@ -172,6 +224,9 @@ $result = $vehiculoObj->listar();
                             <option value="Ford">Ford</option>
                             <option value="Mack">Mack</option>
                             <option value="Kenworth">Kenworth</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Modelo</label><input type="text" name="modelo" class="form-control" required></div>
                             <option value="Internacional">Internacional</option>
                         </select>
                     </div>
@@ -193,6 +248,7 @@ $result = $vehiculoObj->listar();
                 <div class="modal-header"><h5>Editar Vehículo</h5></div>
                 <div class="modal-body p-4">
                     <input type="hidden" name="ID_vehiculo" id="edit_id">
+                    <div class="form-group"><label>Placa</label><input type="text" name="placa" id="edit_placa" class="form-control text-uppercase" required></div>
                     <div class="form-group">
                         <label>Placa</label>
                         <input type="text" name="placa" id="edit_placa" class="form-control text-uppercase" required maxlength="10">
@@ -205,6 +261,9 @@ $result = $vehiculoObj->listar();
                             <option value="Ford">Ford</option>
                             <option value="Mack">Mack</option>
                             <option value="Kenworth">Kenworth</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Modelo</label><input type="text" name="modelo" id="edit_modelo" class="form-control" required></div>
                             <option value="Internacional">Internacional</option>
                         </select>
                     </div>
