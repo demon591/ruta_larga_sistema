@@ -1,5 +1,22 @@
 <?php
 session_start();
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
+
+// 1. SEGURIDAD E INACTIVIDAD
+$timeout = 600;
+if (!isset($_SESSION["usuario"])) {
+    header("Location: login.php");
+    exit();
+}
+
+if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_actividad'] > $timeout)) {
+    session_unset();
+    session_destroy();
+    header("Location: login.php?mensaje=sesion_caducada");
+    exit();
+}
+$_SESSION['ultima_actividad'] = time();
+
 // SEGURIDAD: Si no hay sesión iniciada, lo devolvemos al login
 if (!isset($_SESSION["usuario"])) {
     header("Location: login.php");
@@ -22,11 +39,11 @@ if (!isset($_SESSION["usuario"])) {
             background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../assets/img/fondo.jpg');
             background-size: cover;
             background-position: center;
-            backgrou nd-attachment: fixed;
+            background-attachment: fixed;
             background-repeat: no-repeat;
         }
 
-        /* Glassmorphism para las tarjetas si prefieres un estilo más moderno */
+        /* Glassmorphism para las tarjetas */
         .glass-card {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(5px);
@@ -56,10 +73,10 @@ if (!isset($_SESSION["usuario"])) {
                 unidad administrativa para continuar</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="flex flex-wrap justify-center gap-8">
 
             <a href="flete.php"
-                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)]">
                 <div
                     class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-orange-600 transition-colors">
                     <i class="ph ph-truck text-4xl text-orange-600 group-hover:text-white"></i>
@@ -74,7 +91,7 @@ if (!isset($_SESSION["usuario"])) {
             </a>
 
             <a href="clientes.php"
-                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)]">
                 <div
                     class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors">
                     <i class="ph ph-users-three text-4xl text-blue-600 group-hover:text-white"></i>
@@ -89,7 +106,7 @@ if (!isset($_SESSION["usuario"])) {
             </a>
 
             <a href="vehiculo.php"
-                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)]">
                 <div
                     class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-600 transition-colors">
                     <i class="ph ph-car-profile text-4xl text-green-600 group-hover:text-white"></i>
@@ -104,7 +121,7 @@ if (!isset($_SESSION["usuario"])) {
             </a>
 
             <a href="chofer.php"
-                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)]">
                 <div
                     class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-purple-600 transition-colors">
                     <i class="ph ph-identification-card text-4xl text-purple-600 group-hover:text-white"></i>
@@ -119,7 +136,7 @@ if (!isset($_SESSION["usuario"])) {
             </a>
 
             <a href="inventario.php"
-                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)]">
                 <div
                     class="w-16 h-16 bg-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-yellow-500 transition-colors">
                     <i class="ph ph-package text-4xl text-yellow-600 group-hover:text-white"></i>
