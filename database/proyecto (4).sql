@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-02-2026 a las 05:02:18
+-- Tiempo de generación: 28-02-2026 a las 05:06:32
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -147,7 +147,8 @@ INSERT INTO `vehiculos` (`id_vehiculo`, `placa`, `marca`, `modelo`, `cliente_id`
 --
 ALTER TABLE `choferes`
   ADD PRIMARY KEY (`ID_chofer`),
-  ADD UNIQUE KEY `RIF_cedula` (`RIF_cedula`);
+  ADD UNIQUE KEY `RIF_cedula` (`RIF_cedula`),
+  ADD UNIQUE KEY `telefono` (`telefono`);
 
 --
 -- Indices de la tabla `clientes`
