@@ -52,7 +52,7 @@ class Cliente extends Conexion
     }
     public function insertar()
     {
-        $stmt = $this->conexion->prepare("INSERT INTO clientes (RIF_cedula, nombre, telefono) VALUES (?, ?, 'Cliente', ?)");
+        $stmt = $this->conexion->prepare("INSERT INTO clientes (RIF_cedula, nombre, profesional, telefono) VALUES (?, ?, 'Cliente', ?)");
         $stmt->bind_param("sss", $this->rif, $this->nombre, $this->telefono);
         return $stmt->execute();
     }
@@ -291,7 +291,9 @@ $result = $clienteObj->listar();
                                 <select name="operadora" id="edit_operadora" class="form-control col-4">
                                     <option value="0414">0414</option>
                                     <option value="0424">0424</option>
+                                    <option value="0212">0212</option>
                                     <option value="0412">0412</option>
+                                    <option value="0422">0422</option>
                                     <option value="0416">0416</option>
                                     <option value="0426">0426</option>
                                 </select>
