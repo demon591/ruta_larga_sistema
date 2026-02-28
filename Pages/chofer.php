@@ -4,19 +4,28 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 // 1. SEGURIDAD E INACTIVIDAD
 $timeout = 600;
-if (!isset($_SESSION["usuario"])) { header("Location: login.php"); exit(); }
+if (!isset($_SESSION["usuario"])) { 
+    header("Location: login.php"); 
+    exit(); 
+}
+
 if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_actividad'] > $timeout)) {
-    session_unset(); session_destroy();
+    session_unset(); 
+    session_destroy();
     header("Location: login.php?mensaje=sesion_caducada");
     exit();
 }
 $_SESSION['ultima_actividad'] = time();
 
+// 2. CLASES DE CONEXIÓN Y MODELO
 class Conexion {
     protected $conexion;
     public function __construct() {
         $this->conexion = new mysqli("localhost", "root", "", "proyecto");
         $this->conexion->set_charset("utf8mb4");
+        if ($this->conexion->connect_error) {
+            die("Error de conexión: " . $this->conexion->connect_error);
+        }
     }
 }
 
@@ -28,7 +37,9 @@ class Chofer extends Conexion {
     public function setNombre($v) { $this->nombre = substr(trim($v), 0, 40); } 
     public function setTelefono($v) { $this->telefono = substr(trim($v), 0, 11); } 
 
-    public function listar() { return $this->conexion->query("SELECT * FROM choferes ORDER BY ID_chofer DESC"); }
+    public function listar() { 
+        return $this->conexion->query("SELECT * FROM choferes ORDER BY ID_chofer DESC"); 
+    }
 
     public function insertar() {
         $stmt = $this->conexion->prepare("INSERT INTO choferes (RIF_cedula, nombre, telefono) VALUES (?, ?, ?)");
@@ -52,18 +63,25 @@ class Chofer extends Conexion {
 $choferObj = new Chofer();
 $msg_js = "";
 
-// 3. PROCESAMIENTO
+// 3. PROCESAMIENTO DE ACCIONES
 if (isset($_POST['registrar']) || isset($_POST['editar'])) {
     $tipo = $_POST['tipo_doc'] ?? 'V';
     $num_rif = preg_replace('/[^0-9]/', '', $_POST['RIF_cedula']); 
     $rif_final = $tipo . $num_rif;
     $nombre = trim($_POST['nombre']);
-    $telf = preg_replace('/[^0-9]/', '', $_POST['telefono']); 
+    
+    // Captura de teléfono (unión de operadora + número o campo único en edición)
+    if (isset($_POST['operadora'])) {
+        $telf = $_POST['operadora'] . $_POST['telefono_num'];
+    } else {
+        $telf = $_POST['telefono'];
+    }
+    $telf = preg_replace('/[^0-9]/', '', $telf); 
 
     if (strlen($num_rif) < 6) {
         $msg_js = "swalError('El documento es demasiado corto.');";
     } elseif (strlen($telf) != 11) {
-        $msg_js = "swalError('El teléfono debe tener 11 dígitos.');";
+        $msg_js = "swalError('El teléfono debe tener exactamente 11 dígitos.');";
     } else {
         $choferObj->setRif($rif_final);
         $choferObj->setNombre($nombre);
@@ -99,26 +117,15 @@ $result = $choferObj->listar();
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; }
+        body { 
+            font-family: Georgia, 'Times New Roman', Times, serif; 
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../assets/img/fondo.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
         .navbar-custom { background-color: #08082c; }
         .modal-header { background-color: #08082c; color: white; }
         .badge-rif { background: #e8f5e9; color: #2e7d32; font-weight: bold; border: 1px solid #c8e6c9; }
-    </style>
-        <style>
-        body { 
-            font-family: Georgia, 'Times New Roman', Times, serif; 
-            /* Configuración de la imagen de fondo */
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../assets/img/fondo.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-        }
-        /* Glassmorphism para las tarjetas si prefieres un estilo más moderno */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(5px);
-        }
+        .glass-card { background: rgba(255, 255, 255, 0.95); border-radius: 15px; }
     </style>
 </head>
 <body>
@@ -130,13 +137,13 @@ $result = $choferObj->listar();
     </div>
 </nav>
 
-<div class="container bg-white p-4 shadow rounded">
+<div class="container glass-card p-4 shadow-lg">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4>Gestión de Personal</h4>
+        <h4><i class="fas fa-users-cog"></i> Gestión de Personal</h4>
         <button class="btn btn-success px-4" data-toggle="modal" data-target="#modalRegistro">+ Nuevo Chofer</button>
     </div>
 
-    <table id="tablaChoferes" class="table table-striped table-bordered w-100">
+    <table id="tablaChoferes" class="table table-striped table-bordered w-100 bg-white">
         <thead>
             <tr>
                 <th>RIF / Cédula</th>
@@ -146,22 +153,24 @@ $result = $choferObj->listar();
             </tr>
         </thead>
         <tbody>
-            <?php while ($fila = $result->fetch_assoc()): ?>
-            <tr>
-                <td><span class="badge badge-rif p-2"><?= htmlspecialchars($fila['RIF_cedula']) ?></span></td>
-                <td class="font-weight-bold"><?= htmlspecialchars($fila['nombre']) ?></td>
-                <td><?= htmlspecialchars($fila['telefono']) ?></td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm btnEditar" 
-                            data-id="<?= $fila['ID_chofer'] ?>"
-                            data-rif="<?= htmlspecialchars($fila['RIF_cedula']) ?>"
-                            data-nombre="<?= htmlspecialchars($fila['nombre']) ?>"
-                            data-tel="<?= htmlspecialchars($fila['telefono']) ?>"
-                            data-toggle="modal" data-target="#modalEditar">Editar</button>
-                    <button class="btn btn-danger btn-sm" onclick="confirmarEliminar(<?= $fila['ID_chofer'] ?>, '<?= $fila['nombre'] ?>')">Borrar</button>
-                </td>
-            </tr>
-            <?php endwhile; ?>
+            <?php if ($result): ?>
+                <?php while ($fila = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><span class="badge badge-rif p-2"><?= htmlspecialchars($fila['RIF_cedula']) ?></span></td>
+                    <td class="font-weight-bold"><?= htmlspecialchars($fila['nombre']) ?></td>
+                    <td><?= htmlspecialchars($fila['telefono']) ?></td>
+                    <td class="text-center">
+                        <button class="btn btn-info btn-sm btnEditar" 
+                                data-id="<?= $fila['ID_chofer'] ?>"
+                                data-rif="<?= htmlspecialchars($fila['RIF_cedula']) ?>"
+                                data-nombre="<?= htmlspecialchars($fila['nombre']) ?>"
+                                data-tel="<?= htmlspecialchars($fila['telefono']) ?>"
+                                data-toggle="modal" data-target="#modalEditar">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmarEliminar(<?= $fila['ID_chofer'] ?>, '<?= $fila['nombre'] ?>')">Borrar</button>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 </div>
@@ -186,18 +195,19 @@ $result = $choferObj->listar();
                         <input type="text" name="nombre" class="form-control" required maxlength="40">
                     </div>
                     <div class="form-group">
-                        <label>Teléfono (11 dígitos)</label>
-                        <select name="operadora" class="form-control col-4">
-                                    <option value="0414">0414</option>
-                                    <option value="0424">0424</option>
-                                    <option value="0212">0212</option>
-                                    <option value="0412">0412</option>
-                                    <option value="0422">0422</option>
-                                    <option value="0416">0416</option>
-                                    <option value="0426">0426</option>
-                                </select>
-                        <input type="text" name="telefono" class="form-control" placeholder="04141234567" required 
-                               oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 11);">
+                        <label>Teléfono</label>
+                        <div class="input-group">
+                            <select name="operadora" class="form-control col-4" required>
+                                <option value="0414">0414</option>
+                                <option value="0424">0424</option>
+                                <option value="0416">0416</option>
+                                <option value="0426">0426</option>
+                                <option value="0412">0412</option>
+                                <option value="0422">0422</option> <option value="0212">0212</option>
+                            </select>
+                            <input type="text" name="telefono_num" class="form-control" placeholder="1234567" required 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 7);">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer"><button type="submit" name="registrar" class="btn btn-success btn-block">Guardar Chofer</button></div>
@@ -227,16 +237,7 @@ $result = $choferObj->listar();
                         <input type="text" name="nombre" id="edit_nombre" class="form-control" required maxlength="40">
                     </div>
                     <div class="form-group">
-                        <label>Teléfono</label>
-                        <select name="operadora" class="form-control col-4">
-                                    <option value="0414">0414</option>
-                                    <option value="0424">0424</option>
-                                    <option value="0212">0212</option>
-                                    <option value="0412">0412</option>
-                                    <option value="0422">0422</option>
-                                    <option value="0416">0416</option>
-                                    <option value="0426">0426</option>
-                                </select>
+                        <label>Teléfono (11 dígitos)</label>
                         <input type="text" name="telefono" id="edit_tel" class="form-control" required 
                                oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 11);">
                     </div>
@@ -247,11 +248,11 @@ $result = $choferObj->listar();
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 function swalError(msg) { Swal.fire({ icon: 'error', title: 'Error', text: msg }); }
@@ -272,17 +273,23 @@ $(document).ready(function() {
     if(status === 'reg') Swal.fire({icon:'success', title:'Chofer Guardado', showConfirmButton:false, timer:1500});
     if(status === 'edit') Swal.fire({icon:'info', title:'Datos Actualizados', showConfirmButton:false, timer:1500});
     if(status === 'del') Swal.fire({icon:'error', title:'Chofer Eliminado', showConfirmButton:false, timer:1500});
+    
     <?= $msg_js ?>
 });
 
 function confirmarEliminar(id, nombre) {
     Swal.fire({
         title: '¿Eliminar a ' + nombre + '?',
+        text: "Esta acción no se puede deshacer",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
-        confirmButtonText: 'Sí, borrar'
-    }).then((result) => { if (result.isConfirmed) window.location.href = `?delete=${id}`; });
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, borrar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => { 
+        if (result.isConfirmed) window.location.href = `?delete=${id}`; 
+    });
 }
 </script>
 </body>
