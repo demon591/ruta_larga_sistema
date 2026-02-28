@@ -21,7 +21,7 @@ if (!isset($_SESSION["usuario"])) {
             background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../assets/img/fondo.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
+            backgrou        nd-attachment: fixed;
             background-repeat: no-repeat;
         }
         /* Glassmorphism para las tarjetas si prefieres un estilo más moderno */
@@ -57,8 +57,10 @@ if (!isset($_SESSION["usuario"])) {
                     <i class="ph ph-truck text-4xl text-orange-600 group-hover:text-white"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-2 italic">Registro de Fletes</h3>
-                <p class="text-gray-600 text-sm leading-relaxed">Cree, rastree y administre todos los viajes de carga y logística.</p>
-                <div class="mt-6 text-orange-600 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+                      <p class="text-gray-600 text-sm leading-relaxed">Cree, rastree y administre todos los viajes de carga y
+                    logística.</p>
+                <div
+                    class="mt-6 text-orange-600 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
                     Acceder Módulo <i class="ph ph-caret-double-right"></i>
                 </div>
             </a>
@@ -74,24 +76,32 @@ if (!isset($_SESSION["usuario"])) {
                 </div>
             </a>
 
-            <a href="vehiculo.php" class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-                <div class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-600 transition-colors">
+            <a href="vehiculo.php"
+                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div
+                    class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-600 transition-colors">
                     <i class="ph ph-car-profile text-4xl text-green-600 group-hover:text-white"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-2 italic">Vehículos</h3>
-                <p class="text-gray-600 text-sm leading-relaxed">Administración técnica de la flota y mantenimiento preventivo.</p>
-                <div class="mt-6 text-green-600 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+                <p class="text-gray-600 text-sm leading-relaxed">Administración técnica de la flota y mantenimiento
+                    preventivo.</p>
+                <div
+                    class="mt-6 text-green-600 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
                     Acceder Módulo <i class="ph ph-caret-double-right"></i>
                 </div>
             </a>
 
-            <a href="chofer.php" class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-                <div class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-purple-600 transition-colors">
+            <a href="chofer.php"
+                class="group glass-card p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div
+                    class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-purple-600 transition-colors">
                     <i class="ph ph-identification-card text-4xl text-purple-600 group-hover:text-white"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-2 italic">Rutas de Choferes</h3>
-                <p class="text-gray-600 text-sm leading-relaxed">Asignación de personal a unidades y seguimiento de rutas logísticas.</p>
-                <div class="mt-6 text-purple-600 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+                <p class="text-gray-600 text-sm leading-relaxed">Asignación de personal a unidades y seguimiento de
+                    rutas logísticas.</p>
+                <div
+                    class="mt-6 text-purple-600 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
                     Acceder Módulo <i class="ph ph-caret-double-right"></i>
                 </div>
             </a>
