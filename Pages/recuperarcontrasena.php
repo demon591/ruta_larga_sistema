@@ -108,19 +108,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
 
             } catch (Exception $e) {
 
-                $mensaje_status = "❌ Error al enviar correo: " . $mail->ErrorInfo;
+                $mensaje_status = "Error al enviar correo: " . $mail->ErrorInfo;
 
             }
 
         } else {
 
-            $mensaje_status = "❌ Error al guardar el token en la base de datos.";
+            $mensaje_status = "Error al guardar el token en la base de datos.";
 
         }
 
     } else {
 
-        $mensaje_status = "❌ El correo no existe.";
+        $mensaje_status = "El correo no existe.";
 
     }
 }
